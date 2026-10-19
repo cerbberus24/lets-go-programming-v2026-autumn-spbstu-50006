@@ -76,23 +76,25 @@ func main() {
 	departments, _ := strconv.Atoi(firstLine[0])
 	employees, _ := strconv.Atoi(firstLine[1])
 
-	for i := 0; i < departments; i++ {
+	for i := range departments {
 		temp := NewTemperatureRange()
 
-		for j := 0; j < employees; j++ {
+		for empIdx := 0; empIdx < employees; empIdx++ {
 			if !scanner.Scan() {
 				return
 			}
 
 			line := strings.TrimSpace(scanner.Text())
 			if line == "" {
-				j--
+				empIdx--
+
 				continue
 			}
 
 			parts := strings.Fields(line)
 			if len(parts) < MinPartsLength {
-				j--
+				empIdx--
+
 				continue
 			}
 
