@@ -4,16 +4,15 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
-	"strings"
 )
 
 const (
-	MinTemp        = 15
-	MaxTemp        = 30
-	NoSolution     = -1
-	MinTokensLimit = 2
+	MinTemp    = 15
+	MaxTemp    = 30
+	NoSolution = -1
 )
 
 type Operator string
@@ -23,7 +22,10 @@ const (
 	OpLessOrEqual    Operator = "<="
 )
 
-var ErrUnknownOperator = errors.New("unknown operator")
+var (
+	ErrUnknownOperator = errors.New("unknown operator")
+	ErrUnexpectedEOF   = errors.New("unexpected end of input")
+)
 
 type TemperatureRange struct {
 	low  int
@@ -37,15 +39,15 @@ func NewTemperatureRange() *TemperatureRange {
 	}
 }
 
-func (tr *TemperatureRange) Update(operator Operator, val int) error {
+func (temperature *TemperatureRange) Update(operator Operator, val int) error {
 	switch operator {
 	case OpGreaterOrEqual:
-		if val > tr.low {
-			tr.low = val
+		if val > temperature.low {
+			temperature.low = val
 		}
 	case OpLessOrEqual:
-		if val < tr.high {
-			tr.high = val
+		if val < temperature.high {
+			temperature.high = val
 		}
 	default:
 		return fmt.Errorf("%w: %q", ErrUnknownOperator, operator)
@@ -54,92 +56,114 @@ func (tr *TemperatureRange) Update(operator Operator, val int) error {
 	return nil
 }
 
-func (tr *TemperatureRange) Optimal() int {
-	if tr.low <= tr.high {
-		return tr.low
+func (temperature *TemperatureRange) Optimal() int {
+	if temperature.low <= temperature.high {
+		return temperature.low
 	}
 
 	return NoSolution
 }
 
-func collectTokens() []string {
-	scanner := bufio.NewScanner(os.Stdin)
-
-	var tokens []string
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			continue
-		}
-
-		fields := strings.Fields(line)
-		tokens = append(tokens, fields...)
-	}
-
-	return tokens
+type TokenReader struct {
+	scanner *bufio.Scanner
 }
 
-func processDepartments(tokens []string) {
-	tokenIdx := 0
+func NewTokenReader(reader io.Reader) *TokenReader {
+	scanner := bufio.NewScanner(reader)
+	scanner.Split(bufio.ScanWords)
 
-	nextInt := func() int {
-		if tokenIdx >= len(tokens) {
-			return 0
+	return &TokenReader{scanner: scanner}
+}
+
+func (reader *TokenReader) Next() (string, error) {
+	if !reader.scanner.Scan() {
+		if err := reader.scanner.Err(); err != nil {
+			return "", fmt.Errorf("scanner error: %w", err)
 		}
 
-		val, _ := strconv.Atoi(tokens[tokenIdx])
-		tokenIdx++
-
-		return val
+		return "", ErrUnexpectedEOF
 	}
 
-	nextStr := func() string {
-		if tokenIdx >= len(tokens) {
-			return ""
+	return reader.scanner.Text(), nil
+}
+
+func (reader *TokenReader) NextInt() (int, error) {
+	token, err := reader.Next()
+	if err != nil {
+		return 0, err
+	}
+
+	val, err := strconv.Atoi(token)
+	if err != nil {
+		return 0, fmt.Errorf("invalid integer format %q: %w", token, err)
+	}
+
+	return val, nil
+}
+
+func processEmployee(reader *TokenReader, rangeTracker *TemperatureRange) (int, error) {
+	opStr, err := reader.Next()
+	if err != nil {
+		return NoSolution, err
+	}
+
+	val, err := reader.NextInt()
+	if err != nil {
+		return NoSolution, err
+	}
+
+	if err := rangeTracker.Update(Operator(opStr), val); err != nil {
+		return NoSolution, err // DÜZELTME: Hata varsa hatayı dön
+	}
+
+	return rangeTracker.Optimal(), nil
+}
+
+func processDepartment(reader *TokenReader, out io.Writer) error {
+	employees, err := reader.NextInt()
+	if err != nil {
+		return err
+	}
+
+	rangeTracker := NewTemperatureRange()
+
+	for range employees {
+		res, empErr := processEmployee(reader, rangeTracker)
+		if empErr != nil {
+			return empErr
 		}
 
-		val := tokens[tokenIdx]
-		tokenIdx++
-
-		return val
+		if _, printErr := fmt.Fprintln(out, res); printErr != nil {
+			return fmt.Errorf("print result: %w", printErr)
+		}
 	}
 
-	departments := nextInt()
-	employees := nextInt()
+	return nil
+}
+
+func RunService(in io.Reader, out io.Writer) error {
+	tokenReader := NewTokenReader(in)
+
+	departments, err := tokenReader.NextInt()
+	if err != nil {
+		if errors.Is(err, ErrUnexpectedEOF) {
+			return nil
+		}
+
+		return err
+	}
 
 	for range departments {
-		temp := NewTemperatureRange()
-
-		for range employees {
-			if tokenIdx+1 >= len(tokens) {
-				return
-			}
-
-			opStr := nextStr()
-			valStr := nextStr()
-			operator := Operator(opStr)
-			val, _ := strconv.Atoi(valStr)
-
-			err := temp.Update(operator, val)
-			if err != nil {
-				fmt.Println(NoSolution)
-
-				continue
-			}
-
-			fmt.Println(temp.Optimal())
+		if err := processDepartment(tokenReader, out); err != nil {
+			return err
 		}
 	}
+
+	return nil
 }
 
 func main() {
-	tokens := collectTokens()
-	if len(tokens) < MinTokensLimit {
-		return
+	if err := RunService(os.Stdin, os.Stdout); err != nil {
+		os.Exit(1)
 	}
-
-	processDepartments(tokens)
 }
-
-//
