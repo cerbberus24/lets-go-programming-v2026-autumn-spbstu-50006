@@ -10,10 +10,9 @@ import (
 )
 
 const (
-	MinTemp        = 15
-	MaxTemp        = 30
-	NoSolution     = -1
-	MinPartsLength = 2
+	MinTemp    = 15
+	MaxTemp    = 30
+	NoSolution = -1
 )
 
 type Operator string
@@ -64,42 +63,58 @@ func (tr *TemperatureRange) Optimal() int {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	if !scanner.Scan() {
+
+	var tokens []string
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		tokens = append(tokens, fields...)
+	}
+
+	if len(tokens) < 2 {
 		return
 	}
 
-	firstLine := strings.Fields(scanner.Text())
-	if len(firstLine) < MinPartsLength {
-		return
+	tokenIdx := 0
+	nextInt := func() int {
+		if tokenIdx >= len(tokens) {
+			return 0
+		}
+		val, _ := strconv.Atoi(tokens[tokenIdx])
+		tokenIdx++
+
+		return val
 	}
 
-	departments, _ := strconv.Atoi(firstLine[0])
-	employees, _ := strconv.Atoi(firstLine[1])
+	nextStr := func() string {
+		if tokenIdx >= len(tokens) {
+			return ""
+		}
+		val := tokens[tokenIdx]
+		tokenIdx++
+
+		return val
+	}
+
+	departments := nextInt()
+	employees := nextInt()
 
 	for range departments {
 		temp := NewTemperatureRange()
 
-		for empIdx := 0; empIdx < employees; empIdx++ {
-			if !scanner.Scan() {
+		for range employees {
+			if tokenIdx+1 >= len(tokens) {
 				return
 			}
 
-			line := strings.TrimSpace(scanner.Text())
-			if line == "" {
-				empIdx--
+			opStr := nextStr()
+			valStr := nextStr()
 
-				continue
-			}
-
-			parts := strings.Fields(line)
-			if len(parts) < MinPartsLength {
-				empIdx--
-
-				continue
-			}
-
-			operator := Operator(parts[0])
-			val, _ := strconv.Atoi(parts[1])
+			operator := Operator(opStr)
+			val, _ := strconv.Atoi(valStr)
 
 			err := temp.Update(operator, val)
 			if err != nil {
