@@ -80,6 +80,7 @@ func main() {
 		for range employees {
 			scanner.Scan()
 			line := strings.TrimSpace(scanner.Text())
+
 			if line == "" {
 				continue
 			}
@@ -95,6 +96,7 @@ func main() {
 			err := temp.Update(operator, val)
 			if err != nil {
 				fmt.Println(temp.Optimal())
+
 				continue
 			}
 
