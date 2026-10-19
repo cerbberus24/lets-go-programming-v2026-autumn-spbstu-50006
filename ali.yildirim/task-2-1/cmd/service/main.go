@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 )
@@ -19,8 +18,6 @@ const (
 	OpGreaterOrEqual Operator = ">="
 	OpLessOrEqual    Operator = "<="
 )
-
-var ErrUnknownOperator = errors.New("unknown operator")
 
 type TemperatureRange struct {
 	low  int
@@ -45,7 +42,7 @@ func (tr *TemperatureRange) Update(operator Operator, val int) error {
 			tr.high = val
 		}
 	default:
-		return fmt.Errorf("%w: %q", ErrUnknownOperator, operator)
+		return fmt.Errorf("unknown operator: %q", operator)
 	}
 
 	return nil
@@ -61,12 +58,14 @@ func (tr *TemperatureRange) Optimal() int {
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	var departments, employees int
+
+	var departments int
+
+	var employees int
 
 	_, err := fmt.Fscan(reader, &departments, &employees)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading input:", err)
-		os.Exit(1)
+		return
 	}
 
 	for range departments {
@@ -74,19 +73,21 @@ func main() {
 
 		for range employees {
 			var opStr string
+
 			var val int
+
 			_, err := fmt.Fscan(reader, &opStr, &val)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "Error reading input:", err)
-				os.Exit(1)
+				return
 			}
 
 			operator := Operator(opStr)
 
 			err = temp.Update(operator, val)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "Error:", err)
-				os.Exit(1)
+				fmt.Println(temp.Optimal())
+
+				continue
 			}
 
 			fmt.Println(temp.Optimal())
