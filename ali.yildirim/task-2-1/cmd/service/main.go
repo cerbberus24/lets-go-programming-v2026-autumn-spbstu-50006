@@ -76,7 +76,7 @@ func main() {
 	departments, _ := strconv.Atoi(firstLine[0])
 	employees, _ := strconv.Atoi(firstLine[1])
 
-	for i := range departments {
+	for range departments {
 		temp := NewTemperatureRange()
 
 		for empIdx := 0; empIdx < employees; empIdx++ {
