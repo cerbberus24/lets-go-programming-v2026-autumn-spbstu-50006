@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	MinTemp    = 15
-	MaxTemp    = 30
-	NoSolution = -1
+	MinTemp        = 15
+	MaxTemp        = 30
+	NoSolution     = -1
+	MinPartsLength = 2
 )
 
 type Operator string
@@ -63,10 +64,12 @@ func (tr *TemperatureRange) Optimal() int {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
+	if !scanner.Scan() {
+		return
+	}
 
 	firstLine := strings.Fields(scanner.Text())
-	if len(firstLine) < 2 {
+	if len(firstLine) < MinPartsLength {
 		return
 	}
 
@@ -82,13 +85,12 @@ func main() {
 			}
 
 			line := strings.TrimSpace(scanner.Text())
-
 			if line == "" {
 				continue
 			}
 
 			parts := strings.Fields(line)
-			if len(parts) < 2 {
+			if len(parts) < MinPartsLength {
 				continue
 			}
 
@@ -98,7 +100,6 @@ func main() {
 			err := temp.Update(operator, val)
 			if err != nil {
 				fmt.Println(NoSolution)
-
 				continue
 			}
 
