@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	MinTemp    = 15
-	MaxTemp    = 30
-	NoSolution = -1
+	MinTemp        = 15
+	MaxTemp        = 30
+	NoSolution     = -1
+	MinTokensLimit = 2
 )
 
 type Operator string
@@ -61,28 +62,31 @@ func (tr *TemperatureRange) Optimal() int {
 	return NoSolution
 }
 
-func main() {
+func collectTokens() []string {
 	scanner := bufio.NewScanner(os.Stdin)
-
 	var tokens []string
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
 		}
+
 		fields := strings.Fields(line)
 		tokens = append(tokens, fields...)
 	}
 
-	if len(tokens) < 2 {
-		return
-	}
+	return tokens
+}
 
+func processDepartments(tokens []string) {
 	tokenIdx := 0
+
 	nextInt := func() int {
 		if tokenIdx >= len(tokens) {
 			return 0
 		}
+
 		val, _ := strconv.Atoi(tokens[tokenIdx])
 		tokenIdx++
 
@@ -93,6 +97,7 @@ func main() {
 		if tokenIdx >= len(tokens) {
 			return ""
 		}
+
 		val := tokens[tokenIdx]
 		tokenIdx++
 
@@ -112,7 +117,6 @@ func main() {
 
 			opStr := nextStr()
 			valStr := nextStr()
-
 			operator := Operator(opStr)
 			val, _ := strconv.Atoi(valStr)
 
@@ -126,4 +130,13 @@ func main() {
 			fmt.Println(temp.Optimal())
 		}
 	}
+}
+
+func main() {
+	tokens := collectTokens()
+	if len(tokens) < MinTokensLimit {
+		return
+	}
+
+	processDepartments(tokens)
 }
