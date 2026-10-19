@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -18,6 +19,8 @@ const (
 	OpGreaterOrEqual Operator = ">="
 	OpLessOrEqual    Operator = "<="
 )
+
+var ErrUnknownOperator = errors.New("unknown operator")
 
 type TemperatureRange struct {
 	low  int
@@ -42,7 +45,7 @@ func (tr *TemperatureRange) Update(operator Operator, val int) error {
 			tr.high = val
 		}
 	default:
-		return fmt.Errorf("unknown operator: %q", operator)
+		return fmt.Errorf("%w: %q", ErrUnknownOperator, operator)
 	}
 
 	return nil
@@ -85,7 +88,7 @@ func main() {
 
 			err = temp.Update(operator, val)
 			if err != nil {
-				fmt.Println(temp.Optimal())
+				fmt.Println(NoSolution)
 
 				continue
 			}
