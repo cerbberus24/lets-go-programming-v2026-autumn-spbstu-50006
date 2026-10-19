@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -60,33 +62,39 @@ func (tr *TemperatureRange) Optimal() int {
 }
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
 
-	var departments int
-
-	var employees int
-
-	_, err := fmt.Fscan(reader, &departments, &employees)
-	if err != nil {
+	firstLine := strings.Fields(scanner.Text())
+	if len(firstLine) < 2 {
 		return
 	}
 
-	for range departments {
+	departments, _ := strconv.Atoi(firstLine[0])
+	employees, _ := strconv.Atoi(firstLine[1])
+
+	for i := 0; i < departments; i++ {
 		temp := NewTemperatureRange()
 
-		for range employees {
-			var opStr string
-
-			var val int
-
-			_, err := fmt.Fscan(reader, &opStr, &val)
-			if err != nil {
+		for j := 0; j < employees; j++ {
+			if !scanner.Scan() {
 				return
 			}
+			line := strings.TrimSpace(scanner.Text())
 
-			operator := Operator(opStr)
-			err = temp.Update(operator, val)
+			if line == "" {
+				continue
+			}
 
+			parts := strings.Fields(line)
+			if len(parts) < 2 {
+				continue
+			}
+
+			operator := Operator(parts[0])
+			val, _ := strconv.Atoi(parts[1])
+
+			err := temp.Update(operator, val)
 			if err != nil {
 				fmt.Println(NoSolution)
 
