@@ -64,6 +64,7 @@ func (tr *TemperatureRange) Optimal() int {
 
 func collectTokens() []string {
 	scanner := bufio.NewScanner(os.Stdin)
+
 	var tokens []string
 
 	for scanner.Scan() {
@@ -140,3 +141,5 @@ func main() {
 
 	processDepartments(tokens)
 }
+
+//
