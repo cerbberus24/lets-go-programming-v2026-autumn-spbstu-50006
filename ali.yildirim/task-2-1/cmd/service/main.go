@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -36,8 +34,8 @@ func NewTemperatureRange() *TemperatureRange {
 	}
 }
 
-func (tr *TemperatureRange) Update(op Operator, val int) error {
-	switch op {
+func (tr *TemperatureRange) Update(operator Operator, val int) error {
+	switch operator {
 	case OpGreaterOrEqual:
 		if val > tr.low {
 			tr.low = val
@@ -47,8 +45,9 @@ func (tr *TemperatureRange) Update(op Operator, val int) error {
 			tr.high = val
 		}
 	default:
-		return fmt.Errorf("%w: %q", ErrUnknownOperator, op)
+		return fmt.Errorf("%w: %q", ErrUnknownOperator, operator)
 	}
+
 	return nil
 }
 
@@ -56,40 +55,35 @@ func (tr *TemperatureRange) Optimal() int {
 	if tr.low <= tr.high {
 		return tr.low
 	}
+
 	return NoSolution
 }
 
 func main() {
-	scanner := bufio.NewScanner(os.Stdin)
+	reader := bufio.NewReader(os.Stdin)
+	var departments, employees int
 
-	scanner.Scan()
-	firstLine := strings.Fields(scanner.Text())
-	if len(firstLine) < 2 {
-		return
+	_, err := fmt.Fscan(reader, &departments, &employees)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading input:", err)
+		os.Exit(1)
 	}
 
-	n, _ := strconv.Atoi(firstLine[0])
-	k, _ := strconv.Atoi(firstLine[1])
-
-	for i := 0; i < n; i++ {
+	for range departments {
 		temp := NewTemperatureRange()
 
-		for j := 0; j < k; j++ {
-			scanner.Scan()
-			line := strings.TrimSpace(scanner.Text())
-			if line == "" {
-				continue
+		for range employees {
+			var opStr string
+			var val int
+			_, err := fmt.Fscan(reader, &opStr, &val)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error reading input:", err)
+				os.Exit(1)
 			}
 
-			parts := strings.Fields(line)
-			if len(parts) != 2 {
-				continue
-			}
+			operator := Operator(opStr)
 
-			op := Operator(parts[0])
-			val, _ := strconv.Atoi(parts[1])
-
-			err := temp.Update(op, val)
+			err = temp.Update(operator, val)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "Error:", err)
 				os.Exit(1)
