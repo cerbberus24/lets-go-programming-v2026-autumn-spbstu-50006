@@ -44,17 +44,17 @@ func Load(path string) ([]Currency, error) {
 
 	items := make([]Currency, 0, len(doc.Valutes))
 
-	for _, v := range doc.Valutes {
-		raw := strings.ReplaceAll(strings.TrimSpace(v.Value), ",", ".")
+	for _, valute := range doc.Valutes {
+		raw := strings.ReplaceAll(strings.TrimSpace(valute.Value), ",", ".")
 
 		value, err := strconv.ParseFloat(raw, 64)
 		if err != nil {
-			return nil, fmt.Errorf("parse value %q: %w", v.Value, err)
+			return nil, fmt.Errorf("parse value %q: %w", valute.Value, err)
 		}
 
 		items = append(items, Currency{
-			NumCode:  v.NumCode,
-			CharCode: v.CharCode,
+			NumCode:  valute.NumCode,
+			CharCode: valute.CharCode,
 			Value:    value,
 		})
 	}

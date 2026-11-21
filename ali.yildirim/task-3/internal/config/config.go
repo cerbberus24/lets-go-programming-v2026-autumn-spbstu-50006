@@ -8,6 +8,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var errMissingFields = errors.New("config: input-file and output-file must be set")
+
 type Config struct {
 	InputFile  string `yaml:"input-file"`
 	OutputFile string `yaml:"output-file"`
@@ -25,7 +27,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	if cfg.InputFile == "" || cfg.OutputFile == "" {
-		return nil, errors.New("config: input-file and output-file must be set")
+		return nil, errMissingFields
 	}
 
 	return &cfg, nil
