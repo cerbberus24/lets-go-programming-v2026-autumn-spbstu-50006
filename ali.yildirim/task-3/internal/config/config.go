@@ -15,6 +15,14 @@ type Config struct {
 	OutputFile string `yaml:"output-file"`
 }
 
+func (c *Config) Validate() error {
+	if c.InputFile == "" || c.OutputFile == "" {
+		return errMissingFields
+	}
+
+	return nil
+}
+
 func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -26,8 +34,8 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
-	if cfg.InputFile == "" || cfg.OutputFile == "" {
-		return nil, errMissingFields
+	if err := cfg.Validate(); err != nil {
+		return nil, err
 	}
 
 	return &cfg, nil
